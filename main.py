@@ -1,6 +1,9 @@
 import sys
 import pygame
 
+
+# ADD DIFFICULTY SETTING BY SETTING THE TIME.
+
 pygame.init()
 # ELEMENTS -------------------------------------------------------------------------------------------
 screen = pygame.display.set_mode((1200, 600))
@@ -88,6 +91,7 @@ def word_set():
                         word = word[:-1]
                     elif event.key == pygame.K_RETURN:
                         record = not record
+                        gameplay(word,10)
                     else:
                         word += event.unicode # to get what button is being pressed.
                 if event.key == pygame.K_ESCAPE:
@@ -97,7 +101,8 @@ def word_set():
         if button1.collidepoint((mx,my)):
             button1 = pygame.Rect(495,345,210,60)
             if mouse_click:
-                gameplay(word)
+                record = not record
+                gameplay(word,10)
         
         # Draw Section
         write_text("Word Setting",(255,255,255),font_big, 440,75)
@@ -118,17 +123,25 @@ def word_set():
         pygame.display.update()
 
 
-def gameplay(word):
+def gameplay(word,seconds):
     """
     Main game loop. The player will type and spell the word in order to progress.
     """
+    clock = pygame.time.Clock()
     running = True
+    missing = [letter for letter in word]
+    spelled = ""
+    done = False
+    player_x = 20
+    opponent_x = player_x
+    car_speed = (960/len(word))
+    opponent_speed = (960/seconds)
+    time = 0
+
     while running:
         
         screen.fill((0,0,0))
 
-        write_text("Gameplay Screen",(255,255,255),font_big, 440,75)
-        print(word)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -136,7 +149,49 @@ def gameplay(word):
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
-    
+                if not done:
+                    if event.unicode == missing[0]:
+                        spelled += event.unicode
+                        missing.remove(event.unicode)
+                        player_x += car_speed
+                        if len(missing) == 0:
+                            done = True
+                            if opponent.x < 980:
+                                winner = True
+        
+
+        # CARS ----------------------------------------------------------
+        player = pygame.Rect(player_x,475,200,100)
+        opponent = pygame.Rect(opponent_x,325,200,100)
+
+        # borders
+        if player.x >= 980:
+            player.x = 980
+        if opponent.x >= 980:
+            opponent.x = 980
+            if player_x < 980:
+                done = True
+                winner = False
+        # ----------------------------------------------------------------
+
+        time += 1
+        if done:
+            if winner:
+                write_text("Yey, you won!",(255,255,255),font_big, 440,75)
+            else:
+                write_text("You lost :<",(255,255,255),font_big, 440,75)
+        else:
+            write_text(word,(255,255,255),font_big, 440,75)
+            write_text(spelled,(235, 161, 52),font_big, 440,75)
+            if time == 1000:
+                time = 0
+                opponent_x += opponent_speed
+        
+        pygame.draw.rect(screen,(52, 186, 235), player)
+        pygame.draw.rect(screen,(235, 52, 52), opponent)
+        
+
+        clock.tick(1000)
         pygame.display.update()
                 
 
